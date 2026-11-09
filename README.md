@@ -162,18 +162,22 @@ value are removed, and behaviour on another clock fails the session with a clear
 
 ## Runtime
 
-`cpu: 2048` (2 vCPU), `memory: 4096` MiB, `standard`. Measured in Docker (linux/amd64 under
-emulation on an M-series Mac, `--cpus 2 --memory 4g`, read-only root, `/tmp` tmpfs); peak memory
-is the container's cgroup `memory.peak` (includes page cache of the NWB file):
+`cpu: 2048` (2 vCPU), `memory: 4096` MiB, `timeoutSeconds: 900`, `standard`. Measured on 2026-11-09
+with the image built from the commit that added this table (the HOME fix after `4d80f17`), in
+Docker (linux/amd64 under emulation on an M-series Mac, `--cpus 2 --memory 4g`, read-only root,
+`/tmp` tmpfs, no HOME set), while neuro-encoding was running natively on the same machine, so the
+wall times are pessimistic. Peak memory is the container's cgroup `memory.peak` (it includes the
+page cache of the NWB file being read). Grosmark and Sosa with `EPOCH=run`, the others with the
+defaults:
 
 | Data | Wall time | Peak memory |
 |---|---|---|
-| Synthetic fixture (2 sessions) | 14 s | 711 MB |
-| IBL session (186 units, 2002 s, 7 behaviour variables) | 32 s | 1363 MB |
-| Grosmark (5.4 GB NWB, 58 units, 2328 s) | 30 s | 729 MB |
-| 002047, 6 calcium sessions | 40 s | 1677 MB |
-| Steinmetz `sub-Richards` (490 units, 2955 s) | 34 s | 1073 MB |
-| Sosa `sub-m11_ses-04` (168 ROIs) | 11 s | 582 MB |
+| Synthetic fixture (2 sessions) | 49 s | 848 MB |
+| IBL session (186 units, 2002 s, 7 behaviour variables) | 128 s | 1346 MB |
+| Grosmark (5.4 GB NWB, 58 units, 2328 s, 57 laps) | 65 s | 662 MB |
+| 002047, 6 calcium sessions in one run | 145 s | 1287 MB |
+| Steinmetz `sub-Richards` (490 units, 2955 s) | 123 s | 1226 MB |
+| Sosa `sub-m11_ses-04` (168 ROIs) | 54 s | 752 MB |
 
 Within the Lambda limits (≤ 10240 MiB, ≤ 6 vCPU, ≤ 900 s), so the platform may run it as a Lambda
 step. It is Lambda-safe: it writes only to `OUTPUT_DIR` and `$TMPDIR` (matplotlib and numba caches
