@@ -15,16 +15,17 @@ COPY VERSION /processor/VERSION
 
 ENV PYTHONPATH="/processor" \
     PYTHONUNBUFFERED=1 \
-    HOME=/tmp \
-    MPLBACKEND=Agg \
-    MPLCONFIGDIR=/tmp/matplotlib \
-    NUMBA_CACHE_DIR=/tmp/numba
+    USER=app \
+    MPLBACKEND=Agg
 
-# A passwd entry for uid 1000 (some libraries call getpass); build matplotlib's font cache now and check that
-# the stack imports, so a run needs no writes outside /tmp and no network.
-RUN useradd --uid 1000 --no-create-home --home-dir /tmp --shell /usr/sbin/nologin processor \
-    && python -c "import matplotlib.pyplot, pynwb, ndx_pose, pynapple, pyarrow" \
-    && mkdir -p /tmp/numba /tmp/.cache && chmod -R a+rwX /tmp/matplotlib /tmp/numba /tmp/.cache
+# A passwd entry for uid 1000 (ECS); on Lambda the step runs as another least-privileged user, with HOME,
+# TMPDIR, INPUT_DIR and OUTPUT_DIR under /tmp and everything else read-only. Writable caches are set under
+# $TMPDIR at startup (processor/common.py runtime_env); the matplotlib font cache is built here into
+# /opt/neuro-align/mpl and copied from there. Also checks that the stack imports.
+RUN useradd --uid 1000 --no-create-home --home-dir /nonexistent --shell /usr/sbin/nologin app \
+    && mkdir -p /opt/neuro-align/mpl \
+    && MPLCONFIGDIR=/opt/neuro-align/mpl NUMBA_CACHE_DIR=/opt/neuro-align/numba HOME=/opt/neuro-align python -c "import matplotlib.pyplot, pynwb, ndx_pose, pynapple, pyarrow" \
+    && rm -rf /opt/neuro-align/numba /opt/neuro-align/.cache && chmod -R a+rX /opt/neuro-align
 
 USER 1000
 

@@ -26,7 +26,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-from processor.common import app_version, peak_rss_mb, rel, set_threads, tool_versions, write_json
+from processor.common import app_version, peak_rss_mb, rel, runtime_env, set_threads, tool_versions, write_json
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 log = logging.getLogger("neuro-align")
@@ -506,7 +506,7 @@ def main() -> int:
     if not input_dir.is_dir():
         log.error("INPUT_DIR %s is not a folder", input_dir)
         return 1
-    os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib")
+    runtime_env(APP_NAME)
     try:
         params = read_parameters()
     except ParameterError as exc:

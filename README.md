@@ -175,7 +175,11 @@ is the container's cgroup `memory.peak` (includes page cache of the NWB file):
 | Steinmetz `sub-Richards` (490 units, 2955 s) | 34 s | 1073 MB |
 | Sosa `sub-m11_ses-04` (168 ROIs) | 11 s | 582 MB |
 
-Memory grows with bins × neurons (`X` is float32): 2 hours of 600 units at 25 ms is 1.7 GB, so
+Within the Lambda limits (≤ 10240 MiB, ≤ 6 vCPU, ≤ 900 s), so the platform may run it as a Lambda
+step. It is Lambda-safe: it writes only to `OUTPUT_DIR` and `$TMPDIR` (matplotlib and numba caches
+are set under `$TMPDIR` at startup; the font cache is baked into `/opt/neuro-align/mpl`), and the
+fixture runs with `docker run --read-only --user 65534:65534 --tmpfs /tmp` and `HOME`, `TMPDIR`,
+`INPUT_DIR`, `OUTPUT_DIR` under `/tmp`. Memory grows with bins × neurons (`X` is float32): 2 hours of 600 units at 25 ms is 1.7 GB, so
 use `MAX_DURATION_S` or a larger `BIN_SIZE_S` for very long sessions. Image: 1.34 GB.
 
 ## Limitations

@@ -27,12 +27,14 @@ application:
     - quality-control
 runtime:
   cpu: 2048
-  # Measured (linux/amd64 under emulation on an M-series Mac, 2 CPUs, see README "Runtime"): peak 1.7 GB
-  # (6 openfield sessions), 1.4 GB (IBL, 186 units, 33 min), under a minute each.
+  # Measured (linux/amd64 under emulation on an M-series Mac, 2 CPUs, see README "Runtime"): every demo
+  # session under a minute and at most 1.7 GB peak (6 openfield sessions in one run). Within the Lambda
+  # limits, so the platform may run it as a Lambda step; it is Lambda-safe (writes only OUTPUT_DIR and
+  # $TMPDIR; tested read-only as an arbitrary user).
   memory: 4096
   computeTypes:
     - standard
-  timeoutSeconds: 3600
+  timeoutSeconds: 900
 parameters:
   - name: NEURAL_SOURCE
     type: string

@@ -32,6 +32,26 @@ def cgroup_cpus() -> int:
         return max(1, os.cpu_count() or 1)
 
 
+def runtime_env(app: str) -> str:
+    """Writable caches under $TMPDIR (the only writable places on a Lambda step are INPUT_DIR, OUTPUT_DIR,
+    HOME and TMPDIR); the matplotlib font cache baked into /opt/<app>/mpl is copied there, not rebuilt."""
+    import shutil
+    import tempfile
+
+    tmp = os.environ.get("TMPDIR") or tempfile.gettempdir()
+    mpl = os.environ.setdefault("MPLCONFIGDIR", os.path.join(tmp, "mpl"))
+    os.environ.setdefault("NUMBA_CACHE_DIR", os.path.join(tmp, "numba"))
+    baked = Path("/opt") / app / "mpl"
+    try:
+        Path(mpl).mkdir(parents=True, exist_ok=True)
+        if baked.is_dir() and not any(Path(mpl).glob("fontlist*.json")):
+            for f in baked.glob("fontlist*.json"):
+                shutil.copy(f, mpl)
+    except OSError:
+        pass
+    return tmp
+
+
 def set_threads(threads: int) -> int:
     """Set the BLAS/OpenMP/numba thread counts (before numpy is imported where possible)."""
     n = threads if threads > 0 else cgroup_cpus()
