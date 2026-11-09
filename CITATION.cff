@@ -1,0 +1,664 @@
+cff-version: 1.2.0
+message: If you use this app, please cite it and the works it builds on, listed under references.
+type: software
+title: neuro-align
+abstract: Reads neural activity (spike-sorted units or calcium-imaging ROIs) and behaviour (position, speed, head
+  direction, pose keypoints, wheel, pupil, licks, trials) from NWB files with pynwb and ndx-pose, puts them on one
+  time grid of the session clock with pynapple, and writes binned activity, behaviour, spike times, events and QC
+  figures for the decoding and encoding apps. Part of the Pennsieve systems neuroscience workflows.
+authors:
+- name: Pennsieve (University of Pennsylvania)
+contact:
+- given-names: Joost
+  family-names: Wagenaar
+  orcid: https://orcid.org/0009-0004-5925-5451
+  affiliation: University of Pennsylvania
+repository-code: https://github.com/pennsieve-apps/neuro-align
+license: Apache-2.0
+keywords:
+- neuroscience
+- neural-decoding
+- electrophysiology
+- calcium-imaging
+- behavior
+- nwb
+- pynapple
+- alignment
+references:
+- type: article
+  title: Pynapple, a toolbox for data analysis in neuroscience
+  authors:
+  - family-names: Viejo
+    given-names: Guillaume
+  - family-names: Levenstein
+    given-names: Daniel
+  - family-names: Skromne Carrasco
+    given-names: Sofia
+  - family-names: Mehrotra
+    given-names: Dhruv
+  - family-names: Mahallati
+    given-names: Sara
+  - family-names: Vite
+    given-names: Gilberto R
+  - family-names: Denny
+    given-names: Henry
+  - family-names: Sjulson
+    given-names: Lucas
+  - family-names: Battaglia
+    given-names: Francesco P
+  - family-names: Peyrache
+    given-names: Adrien
+  year: 2023
+  journal: eLife
+  volume: 12
+  doi: 10.7554/eLife.85786
+  identifiers:
+  - type: other
+    value: '37843985'
+    description: PMID
+- type: article
+  title: The Neurodata Without Borders ecosystem for neurophysiological data science
+  authors:
+  - family-names: Rübel
+    given-names: Oliver
+  - family-names: Tritt
+    given-names: Andrew
+  - family-names: Ly
+    given-names: Ryan
+  - family-names: Dichter
+    given-names: Benjamin K
+  - family-names: Ghosh
+    given-names: Satrajit
+  - family-names: Niu
+    given-names: Lawrence
+  - family-names: Baker
+    given-names: Pamela
+  - family-names: Soltesz
+    given-names: Ivan
+  - family-names: Ng
+    given-names: Lydia
+  - family-names: Svoboda
+    given-names: Karel
+  - family-names: Frank
+    given-names: Loren
+  - family-names: Bouchard
+    given-names: Kristofer E
+  year: 2022
+  journal: eLife
+  volume: 11
+  doi: 10.7554/eLife.78362
+  identifiers:
+  - type: other
+    value: '36193886'
+    description: PMID
+- type: software
+  title: 'ndx-pose: NWB extension for storing pose estimation data'
+  authors:
+  - family-names: Ly
+    given-names: Ryan
+  - family-names: Dichter
+    given-names: Ben
+  - family-names: Mathis
+    given-names: Alexander
+  - family-names: Maree
+    given-names: Liezl
+  - family-names: Brozdowski
+    given-names: Chris
+  - family-names: Mayorquin
+    given-names: Heberto
+  - family-names: Pereira
+    given-names: Talmo
+  - family-names: Berrigan
+    given-names: Elizabeth
+  - family-names: Adkisson
+    given-names: Paul
+  - family-names: Trapani
+    given-names: Alessandra
+  repository-code: https://github.com/rly/ndx-pose
+  license: BSD-3-Clause
+  version: 0.4.0
+  notes: Authors as listed in the package metadata on PyPI (ndx-pose 0.4.0).
+- type: data
+  title: Diversity in neural firing dynamics supports both rigid and learned hippocampal sequences
+  authors:
+  - family-names: Grosmark
+    given-names: Andres D.
+  - family-names: Buzsáki
+    given-names: György
+  year: 2026
+  publisher:
+    name: DANDI Archive
+  version: 0.261106.0236
+  doi: 10.48324/dandi.000044/0.261106.0236
+- type: article
+  title: Diversity in neural firing dynamics supports both rigid and learned hippocampal sequences
+  authors:
+  - family-names: Grosmark
+    given-names: Andres D.
+  - family-names: Buzsáki
+    given-names: György
+  year: 2016
+  journal: Science
+  volume: 351
+  issue: '6280'
+  start: '1440'
+  end: '1443'
+  doi: 10.1126/science.aad1935
+  identifiers:
+  - type: other
+    value: '27013730'
+    description: PMID
+- type: data
+  title: IBL - Brain Wide Map
+  authors:
+  - name: International Brain Laboratory
+  year: 2026
+  publisher:
+    name: DANDI Archive
+  version: 0.260309.1324
+  doi: 10.48324/dandi.000409/0.260309.1324
+- type: article
+  title: A brain-wide map of neural activity during complex behaviour
+  authors:
+  - name: International Brain Laboratory
+  - family-names: Meshulam
+    given-names: Leenoy
+  - family-names: Angelaki
+    given-names: Dora
+  - family-names: Benson
+    given-names: Julius
+  - family-names: McRoberts
+    given-names: Isaiah
+  - family-names: Noel
+    given-names: Jean-Paul
+  - family-names: Arlandis
+    given-names: Jaime
+  - family-names: Bonacchi
+    given-names: Niccolò
+  - family-names: Bougrova
+    given-names: Kcenia
+  - family-names: Catarino
+    given-names: Joana A.
+  - family-names: Cazettes
+    given-names: Fanny
+  - family-names: Crombie
+    given-names: Davide
+  - family-names: DeWitt
+    given-names: Eric EJ
+  - family-names: Freitas-Silva
+    given-names: Laura
+  - family-names: Laranjeira
+    given-names: Inês C.
+  - family-names: Mainen
+    given-names: Zachary F.
+  - family-names: Meijer
+    given-names: Guido T.
+  - family-names: Rai
+    given-names: Pranav
+  - family-names: Raiser
+    given-names: Georg
+  - family-names: Rau
+    given-names: Florian
+  - family-names: Schartner
+    given-names: Michael M.
+  - family-names: Winter
+    given-names: Olivier
+  - family-names: Urai
+    given-names: Anne E.
+  - family-names: Aguillon-Rodriguez
+    given-names: Valeria
+  - family-names: Soitu
+    given-names: Cristian
+  - family-names: Zador
+    given-names: Anthony M.
+  - family-names: Krasniak
+    given-names: Christopher S.
+  - family-names: Dan
+    given-names: Yang
+  - family-names: Hu
+    given-names: Fei
+  - family-names: Benson
+    given-names: Brandon
+  - family-names: Ganguli
+    given-names: Surya
+  - family-names: Acerbi
+    given-names: Luigi
+  - family-names: Chapuis
+    given-names: Gaelle A.
+  - family-names: Findling
+    given-names: Charles
+  - family-names: Gercek
+    given-names: Berk
+  - family-names: Huber
+    given-names: Felix
+  - family-names: Pouget
+    given-names: Alexandre
+  - family-names: Barrell
+    given-names: Hailey
+  - family-names: Birman
+    given-names: Dan
+  - family-names: Miller
+    given-names: Kim
+  - family-names: Nylund
+    given-names: Kai
+  - family-names: Roth
+    given-names: Noam
+  - family-names: Steinmetz
+    given-names: Nicholas A.
+  - family-names: Tucker
+    given-names: Matthew
+  - family-names: Yang
+    given-names: Kenneth
+  - family-names: Fiete
+    given-names: Ila Rani
+  - family-names: Liu
+    given-names: Ari
+  - family-names: Schaeffer
+    given-names: Rylan
+  - family-names: Churchland
+    given-names: Anne K.
+  - family-names: Davatolhagh
+    given-names: Felicia
+  - family-names: Khanal
+    given-names: Anup
+  - family-names: Melin
+    given-names: Maxwell
+  - family-names: Murakami
+    given-names: Masayoshi
+  - family-names: Denève
+    given-names: Sophie
+  - family-names: Gordeliy
+    given-names: Ivan
+  - family-names: Ahmadi
+    given-names: Mandana
+  - family-names: Amjad
+    given-names: Jaweria
+  - family-names: Hiratani
+    given-names: Naoki
+  - family-names: Krishnagopal
+    given-names: Sanjukta
+  - family-names: Latham
+    given-names: Peter
+  - family-names: Pezzotta
+    given-names: Alberto
+  - family-names: Xu
+    given-names: Zekai
+  - family-names: Banga
+    given-names: Kush
+  - family-names: Bhagat
+    given-names: Jai
+  - family-names: Faulkner
+    given-names: Mayo
+  - family-names: Harris
+    given-names: Kenneth D.
+  - family-names: Krumin
+    given-names: Michael
+  - family-names: Picard
+    given-names: Samuel
+  - family-names: Quadrado
+    given-names: Carolina
+  - family-names: Rossant
+    given-names: Cyrille
+  - family-names: Wells
+    given-names: Miles J.
+  - family-names: Wool
+    given-names: Lauren E.
+  - family-names: Carandini
+    given-names: Matteo
+  - family-names: Landemard
+    given-names: Agnès
+  - family-names: Socha
+    given-names: Karolina Z.
+  - family-names: Bruijns
+    given-names: Sebastian A.
+  - family-names: Dayan
+    given-names: Peter
+  - family-names: Huntenburg
+    given-names: Julia M.
+  - family-names: Kundu
+    given-names: Debottam
+  - family-names: Oloomi
+    given-names: Farideh
+  - family-names: Tessereau
+    given-names: Charline
+  - family-names: Ashwood
+    given-names: Zoe C.
+  - family-names: Engel
+    given-names: Tatiana
+  - family-names: Fetcho
+    given-names: Robert
+  - family-names: Haetzel
+    given-names: Laura M.
+  - family-names: Langdon
+    given-names: Christopher
+  - family-names: McMannon
+    given-names: Brenna
+  - family-names: Mohammadi
+    given-names: Zeinab
+  - family-names: Vazquez
+    given-names: Alejandro Pan
+  - family-names: Pillow
+    given-names: Jonathan W.
+  - family-names: Roy
+    given-names: Nicholas A.
+  - family-names: Shi
+    given-names: Yanliang
+  - family-names: Witten
+    given-names: Ilana B.
+  - family-names: Campbell
+    given-names: Robert
+  - family-names: Ghani
+    given-names: Naureen
+  - family-names: Hofer
+    given-names: Sonja B.
+  - family-names: Martinez-Vergara
+    given-names: Hernando
+  - family-names: Miska
+    given-names: Nathaniel J.
+  - family-names: Mrsic-Flogel
+    given-names: Thomas
+  - family-names: West
+    given-names: Steven J.
+  - family-names: Yang
+    given-names: Yaxuan
+  - family-names: Svoboda
+    given-names: Karel
+  - family-names: Taheri
+    given-names: Marsa
+  - family-names: Häusser
+    given-names: Michael
+  - family-names: Lau
+    given-names: Petrina Y. P.
+  - family-names: Makri-Cottington
+    given-names: Amalia
+  - family-names: Perrenoud
+    given-names: Sabrina
+  - family-names: Abbot
+    given-names: Larry
+  - family-names: Bayer
+    given-names: Hannah M.
+  - family-names: Boussard
+    given-names: Julien
+  - family-names: Buchanan
+    given-names: E. Kelly
+  - family-names: Fabbri
+    given-names: Michele
+  - family-names: Hurwitz
+    given-names: Cole
+  - family-names: Langfield
+    given-names: Christopher
+  - family-names: Lee
+    given-names: Hyun Dong
+  - family-names: Mitelut
+    given-names: Catalin
+  - family-names: Paninski
+    given-names: Liam
+  - family-names: Saniee
+    given-names: Kamron
+  - family-names: Varol
+    given-names: Erdem
+  - family-names: Wang
+    given-names: Shuqi
+  - family-names: Whiteway
+    given-names: Matthew R.
+  - family-names: Windolf
+    given-names: Charles
+  - family-names: Yu
+    given-names: Han
+  - family-names: Zhang
+    given-names: Yizi
+  - family-names: Angelaki
+    given-names: Dora
+    alias: listed 2 times in the registry author list
+  - family-names: Benson
+    given-names: Brandon
+    alias: listed 2 times in the registry author list
+  - family-names: Benson
+    given-names: Julius
+    alias: listed 2 times in the registry author list
+  - family-names: Birman
+    given-names: Daniel
+  - family-names: Bonacchi
+    given-names: Niccolò
+    alias: listed 2 times in the registry author list
+  - family-names: Bougrova
+    given-names: Kcénia
+  - family-names: Bruijns
+    given-names: Sebastian A.
+    alias: listed 2 times in the registry author list
+  - family-names: Carandini
+    given-names: Matteo
+    alias: listed 2 times in the registry author list
+  - family-names: Catarino
+    given-names: Joana A.
+    alias: listed 2 times in the registry author list
+  - family-names: Chapuis
+    given-names: Gaelle A.
+    alias: listed 2 times in the registry author list
+  - family-names: Churchland
+    given-names: Anne K.
+    alias: listed 2 times in the registry author list
+  - family-names: Dan
+    given-names: Yang
+    alias: listed 2 times in the registry author list
+  - family-names: Davatolhagh
+    given-names: Felicia
+    alias: listed 2 times in the registry author list
+  - family-names: Dayan
+    given-names: Peter
+    alias: listed 2 times in the registry author list
+  - family-names: DeWitt
+    given-names: Eric EJ
+    alias: listed 2 times in the registry author list
+  - family-names: Engel
+    given-names: Tatiana A.
+  - family-names: Fabbri
+    given-names: Michele
+    alias: listed 2 times in the registry author list
+  - family-names: Faulkner
+    given-names: Mayo
+    alias: listed 2 times in the registry author list
+  - family-names: Fiete
+    given-names: Ila Rani
+    alias: listed 2 times in the registry author list
+  - family-names: Findling
+    given-names: Charles
+    alias: listed 2 times in the registry author list
+  - family-names: Freitas-Silva
+    given-names: Laura
+    alias: listed 2 times in the registry author list
+  - family-names: Gerçek
+    given-names: Berk
+  - family-names: Harris
+    given-names: Kenneth D.
+    alias: listed 2 times in the registry author list
+  - family-names: Häusser
+    given-names: Michael
+    alias: listed 2 times in the registry author list
+  - family-names: Hofer
+    given-names: Sonja B.
+    alias: listed 2 times in the registry author list
+  - family-names: Hu
+    given-names: Fei
+    alias: listed 2 times in the registry author list
+  - family-names: Hubert
+    given-names: Félix
+  - family-names: Huntenburg
+    given-names: Julia M.
+    alias: listed 2 times in the registry author list
+  - family-names: Khanal
+    given-names: Anup
+    alias: listed 2 times in the registry author list
+  - family-names: Krasniak
+    given-names: Christopher S.
+    alias: listed 2 times in the registry author list
+  - family-names: Langdon
+    given-names: Christopher
+    alias: listed 2 times in the registry author list
+  - family-names: Langfield
+    given-names: Christopher
+    alias: listed 2 times in the registry author list
+  - family-names: Lau
+    given-names: Petrina Y. P.
+    alias: listed 2 times in the registry author list
+  - family-names: Mainen
+    given-names: Zachary F.
+    alias: listed 2 times in the registry author list
+  - family-names: Meijer
+    given-names: Guido T.
+    alias: listed 2 times in the registry author list
+  - family-names: Miska
+    given-names: Nathaniel J.
+    alias: listed 2 times in the registry author list
+  - family-names: Mrsic-Flogel
+    given-names: Thomas D.
+  - family-names: Noel
+    given-names: Jean-Paul
+    alias: listed 2 times in the registry author list
+  - family-names: Nylund
+    given-names: Kai
+    alias: listed 2 times in the registry author list
+  - family-names: Pan-Vazquez
+    given-names: Alejandro
+  - family-names: Paninski
+    given-names: Liam
+    alias: listed 2 times in the registry author list
+  - family-names: Pouget
+    given-names: Alexandre
+    alias: listed 2 times in the registry author list
+  - family-names: Rossant
+    given-names: Cyrille
+    alias: listed 2 times in the registry author list
+  - family-names: Roth
+    given-names: Noam
+    alias: listed 2 times in the registry author list
+  - family-names: Schaeffer
+    given-names: Rylan
+    alias: listed 2 times in the registry author list
+  - family-names: Schartner
+    given-names: Michael
+  - family-names: Shi
+    given-names: Yanliang
+    alias: listed 2 times in the registry author list
+  - family-names: Socha
+    given-names: Karolina Z.
+    alias: listed 2 times in the registry author list
+  - family-names: Steinmetz
+    given-names: Nicholas A.
+    alias: listed 2 times in the registry author list
+  - family-names: Svoboda
+    given-names: Karel
+    alias: listed 2 times in the registry author list
+  - family-names: Urai
+    given-names: Anne E.
+    alias: listed 2 times in the registry author list
+  - family-names: Wells
+    given-names: Miles J.
+    alias: listed 2 times in the registry author list
+  - family-names: West
+    given-names: Steven J.
+    alias: listed 2 times in the registry author list
+  - family-names: Whiteway
+    given-names: Matthew R.
+    alias: listed 2 times in the registry author list
+  - family-names: Winter
+    given-names: Olivier
+    alias: listed 2 times in the registry author list
+  - family-names: Witten
+    given-names: Ilana B.
+    alias: listed 2 times in the registry author list
+  year: 2025
+  journal: Nature
+  volume: 645
+  issue: '8079'
+  start: '177'
+  end: '191'
+  doi: 10.1038/s41586-025-09235-0
+  identifiers:
+  - type: other
+    value: '40903598'
+    description: PMID
+- type: data
+  title: Hippocampal CA1 one-photon calcium imaging and pose-tracked behavior in wild-type and 5xFAD mice across
+    four behavioral paradigms
+  authors:
+  - family-names: Plusnin
+    given-names: Viktor
+  - family-names: Pospelov
+    given-names: Nikita
+  year: 2026
+  publisher:
+    name: DANDI Archive
+  version: 0.261106.0903
+  doi: 10.48324/dandi.002047/0.261106.0903
+- type: data
+  title: Distributed coding of choice, action and engagement across the mouse brain
+  authors:
+  - family-names: Steinmetz
+    given-names: Nicholas
+  - family-names: Zatka-Haas
+    given-names: Peter
+  - family-names: Carandini
+    given-names: Matteo
+  - family-names: Harris
+    given-names: Kenneth
+  year: 2024
+  publisher:
+    name: DANDI Archive
+  doi: 10.48324/dandi.000017/0.240329.1926
+- type: article
+  title: Distributed coding of choice, action and engagement across the mouse brain
+  authors:
+  - family-names: Steinmetz
+    given-names: Nicholas A.
+  - family-names: Zatka-Haas
+    given-names: Peter
+  - family-names: Carandini
+    given-names: Matteo
+  - family-names: Harris
+    given-names: Kenneth D.
+  year: 2019
+  journal: Nature
+  volume: 576
+  issue: '7786'
+  start: '266'
+  end: '273'
+  doi: 10.1038/s41586-019-1787-x
+  identifiers:
+  - type: other
+    value: '31776518'
+    description: PMID
+- type: data
+  title: A flexible hippocampal population code for experience relative to reward
+  authors:
+  - family-names: Sosa
+    given-names: Marielena
+  - family-names: Plitt
+    given-names: Mark H.
+  - family-names: Giocomo
+    given-names: Lisa M.
+  year: 2025
+  publisher:
+    name: DANDI Archive
+  url: https://dandiarchive.org/dandiset/001361/draft
+  notes: DANDI 001361 (draft, no versioned DOI yet); CC-BY-4.0. Creators as the DANDI API lists them.
+- type: article
+  title: A flexible hippocampal population code for experience relative to reward
+  authors:
+  - family-names: Sosa
+    given-names: Marielena
+  - family-names: Plitt
+    given-names: Mark H.
+  - family-names: Giocomo
+    given-names: Lisa M.
+  year: 2025
+  journal: Nature Neuroscience
+  volume: 28
+  issue: '7'
+  start: '1497'
+  end: '1509'
+  doi: 10.1038/s41593-025-01985-4
+  identifiers:
+  - type: other
+    value: '40500314'
+    description: PMID

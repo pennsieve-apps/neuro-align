@@ -1,0 +1,161 @@
+# yaml-language-server: $schema=https://schemas.pennsieve.io/app-manifest/v1.json
+schemaVersion: "1.0"
+application:
+  name: Neural and Behaviour Alignment
+  description: >-
+    Puts neural activity and behaviour of a session on one time grid, the first step of the Neural
+    Population Dynamics & Decoding workflow. Reads spike-sorted units (NWB Units, with good-unit,
+    firing-rate and brain-area filters) or calcium-imaging ROIs (deconvolved, else dF/F, else
+    fluorescence; accepted ROIs only) and behaviour (position, linearised on a linear track, speed,
+    head direction, pose keypoint speeds from ndx-pose, IBL wheel, pupil, licks, trials and other
+    TimeIntervals) from NWB files with pynwb and ndx-pose, from ephys-curate, ophys-traces and
+    pose-kinematics or any DANDI file. Bins with pynapple (25 ms for units, the imaging frame for
+    ROIs), marks an analysis epoch (all, trials, running or any TimeIntervals table) and warns about
+    clock mismatches. Writes aligned.npz, spikes.npz, events.parquet, manifest.json and QC figures
+    (raster with behaviour, neurons per region, time coverage).
+  type: processor
+  tags:
+    - neuroscience
+    - neural-decoding
+    - electrophysiology
+    - calcium-imaging
+    - behavior
+    - nwb
+    - neuropixels
+    - two-photon
+    - pose-estimation
+    - quality-control
+runtime:
+  cpu: 2048
+  # Measured (linux/amd64 under emulation on an M-series Mac, 2 CPUs, see README "Runtime"): peak 1.7 GB
+  # (6 openfield sessions), 1.4 GB (IBL, 186 units, 33 min), under a minute each.
+  memory: 4096
+  computeTypes:
+    - standard
+  timeoutSeconds: 3600
+parameters:
+  - name: NEURAL_SOURCE
+    type: string
+    description: "'units' (Units table spike times), 'roi' (ophys ROI traces) or 'auto' (units when a file has them, else ROIs)."
+    defaultValue: auto
+    validValues: [auto, units, roi]
+  - name: ROI_TRACE
+    type: string
+    description: "ROI signal: 'auto' (deconvolved, else dF/F, else fluorescence), or one of them explicitly."
+    defaultValue: auto
+    validValues: [auto, deconvolved, dff, fluorescence]
+  - name: UNIT_LABELS
+    type: string
+    description: >-
+      Units whose curation label is one of these (comma-separated) are kept, read from the first of the
+      columns label, quality, ibl_quality_score (1 = good), KSLabel, bombcell_label, phy_annotations
+      (>= 2 = good). 'all' keeps every unit. Without such a column every unit is kept.
+    defaultValue: good
+  - name: MIN_RATE_HZ
+    type: number
+    description: Units firing less than this in the aligned window are dropped (units only).
+    defaultValue: 0.1
+    min: 0
+  - name: BRAIN_AREAS
+    type: string
+    description: >-
+      Comma-separated brain areas to keep (a neuron's region must start with one of them, case
+      ignored, e.g. 'CA1,VIS'); empty keeps all.
+    defaultValue: ""
+  - name: BEHAVIOR_VARS
+    type: string
+    description: >-
+      'auto' (every variable found: position, x, y, speed, run_direction, head_direction,
+      wheel_position, wheel_velocity, pupil, licks, keypoint speeds), or a comma-separated list of
+      these names ('keypoint_speeds' for all keypoint speeds) and/or the names of other NWB
+      behaviour series to add (e.g. 'auto,face_motion_energy').
+    defaultValue: auto
+  - name: LINEARIZE
+    type: string
+    description: "2D position: 'auto' linearises it when the path is a linear track (long axis >= 5x the short one), 'true' always, 'false' never."
+    defaultValue: auto
+    validValues: [auto, "true", "false"]
+  - name: BIN_SIZE_S
+    type: string
+    description: "Bin width in seconds, or 'frame' (the imaging frame period), or 'auto' (0.025 s for units, the frame period for ROIs)."
+    defaultValue: auto
+  - name: EPOCH
+    type: string
+    description: >-
+      Analysis epoch marked in epoch_mask: 'all', 'trials' (the trials table), 'run' (speed above
+      RUN_SPEED for at least 0.5 s) or the name of any TimeIntervals table in the files. All bins are
+      written; downstream apps analyse the masked ones.
+    defaultValue: all
+  - name: RUN_SPEED
+    type: string
+    description: "Running threshold for EPOCH=run and run_direction, in the speed's unit; 'auto' = 3 cm/s (converted for m/s, mm/s), else 10% of the 95th percentile."
+    defaultValue: auto
+  - name: SMOOTH_S
+    type: number
+    description: Gaussian smoothing (s) before speeds and velocities are derived from positions.
+    defaultValue: 0.1
+    min: 0
+  - name: POSE_MIN_CONFIDENCE
+    type: number
+    description: Pose keypoints below this confidence are treated as missing (and interpolated over short gaps).
+    defaultValue: 0.5
+    min: 0
+    max: 1
+  - name: MAX_DURATION_S
+    type: number
+    description: Cap on the aligned window per session (s from its start); 0 = no cap.
+    defaultValue: 0
+    min: 0
+  - name: THREADS
+    type: integer
+    description: Threads for BLAS/numba; 0 = from the container's CPU quota.
+    defaultValue: 0
+    min: 0
+inputs:
+  - name: neural
+    description: >-
+      NWB files with a Units table (spike_times; optional label/quality, brain_area/location,
+      electrodes, depth) or processing/ophys ROI traces (Deconvolved / DfOverF / Fluorescence with a
+      PlaneSegmentation, accepted or iscell): ephys-curate's units NWB, ophys-traces' ophys NWB, or a
+      DANDI file. Sessions are matched by session_id (sessions.csv or sub-<x>_ses-<y> in the name).
+    mediaTypes:
+      - "application/x-hdf5; profile=nwb"
+    placement: subfolder
+    required: true
+  - name: behavior
+    description: >-
+      NWB files with processing/behavior (Position, CompassDirection, BehavioralTimeSeries,
+      PupilTracking, BehavioralEvents, ndx-pose PoseEstimation, IBL wheel) and/or TimeIntervals
+      (trials, ...): pose-kinematics' or pose-estimate's NWB, or a DANDI file. Optional: a neural file
+      that also holds behaviour (DANDI processed files) is used as is.
+    mediaTypes:
+      - "application/x-hdf5; profile=nwb"
+    placement: subfolder
+    required: false
+  - name: sessions
+    description: "Optional sessions.csv: session_id, path (a file or folder name), subject_id, condition, group, ... to name and pair sessions."
+    mediaTypes:
+      - text/csv
+    placement: subfolder
+    required: false
+outputs:
+  - name: aligned
+    description: >-
+      neuro-align/<session_id>/aligned.npz (t, X bins x neurons, Y bins x behaviour, neuron_ids,
+      neuron_meta, behavior_names/units/kinds, epoch_mask, bin_size), spikes.npz (spike times per
+      unit), events.parquet (TimeIntervals rows and point events), manifest.json, QC figures;
+      neuro-align/sessions.csv, summary.json, provenance.json.
+    mediaTypes:
+      - application/octet-stream
+      - application/vnd.apache.parquet
+      - application/json
+      - text/csv
+      - image/png
+
+# How a release is tested before it is made public: the inputs a review run uses.
+# See app-deploy-service docs/app-manifest-review.md.
+review:
+  version: 1
+  generate:
+    command: python -m tests.make_fixture "$REVIEW_INPUT_DIR" --layout both
+    root: linked
