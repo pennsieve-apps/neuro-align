@@ -84,8 +84,9 @@ parameters:
   - name: EPOCH
     type: string
     description: >-
-      Analysis epoch marked in epoch_mask: 'all', 'trials' (the trials table), 'run' (speed above
-      RUN_SPEED for at least 0.5 s) or the name of any TimeIntervals table in the files. All bins are
+      Analysis epoch marked in epoch_mask: 'all', 'trials' (the trials table), 'run' (on a linear track,
+      running along the track inside detected laps; elsewhere speed above RUN_SPEED for at least 0.5 s)
+      or the name of any TimeIntervals table in the files. All bins are
       written; downstream apps analyse the masked ones.
     defaultValue: all
   - name: RUN_SPEED
