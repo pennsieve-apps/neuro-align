@@ -65,6 +65,8 @@ def test_units_session(linked_out, fixture_dir):
     for v in ("x", "y", "position", "speed", "run_direction", "licks", "nose_speed", "tailbase_speed"):
         assert v in names, v
     assert m["behavior"]["linear_track"]["detected"]
+    # every end-to-end run of the simulated track is found as a lap
+    assert m["behavior"]["laps"]["n"] == gt["n_laps"]
     # spike counts match the raw spike times in the window
     sp = np.load(linked_out / "sub-synth01_ses-track" / "spikes.npz")
     assert list(sp["neuron_ids"]) == ids
@@ -132,6 +134,7 @@ def test_epochs_and_filters(fixture_dir, tmp_path):
     assert 0.3 < d["epoch_mask"].mean() < 0.95
     spd = d["Y"][:, list(d["behavior_names"]).index("speed")]
     assert np.nanmedian(spd[d["epoch_mask"]]) > 10
+    assert m["epoch"]["definition"] == "running along the track inside detected laps"
     assert run(fixture_dir / "linked", tmp_path / "b", EPOCH="trials", NEURAL_SOURCE="units") == 0
     d, m = load(tmp_path / "b" / "neuro-align", "sub-synth01_ses-track")
     assert m["epoch"]["table"] == "trials" and 0.3 < d["epoch_mask"].mean() < 1

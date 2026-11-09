@@ -70,9 +70,15 @@ neural-only and one behaviour-only session, they are paired with a warning.
 **Behaviour.** From every behaviour file of the session (the first source of a variable wins):
 `x`, `y` (Position; if there is none, a body-centre keypoint, or the keypoint centroid, of a
 single-camera pose without a wheel); `position` (a 1D position in the file, or 2D position
-linearised on its long axis when the path is a linear track, `LINEARIZE`); `speed` (a recorded
-running speed, else from position); `run_direction` (+1/−1 while running along the track, 0 when
-still); `head_direction` (CompassDirection or heading series; degrees converted to radians, binned
+linearised on its long axis when the path is a linear track, `LINEARIZE`; when the file's 1D
+position covers less than half the time the 2D position does, as in Grosmark's lap-only
+`linearized_position`, the linearised 2D position is used and the file's own is kept under its
+name); `speed` (a recorded running speed, else from position); `run_direction`: on a linear track
+laps are detected (from the last moment in one end zone, the outer 10% of the track, to the first
+moment in the other; 0.5-60 s; written to events.parquet as `laps_detected`) and `run_direction`
+is +1/−1 inside a lap while moving along the track at ≥ `RUN_SPEED`, 0 elsewhere (end platforms,
+pauses, turns, grooming); without laps it is the sign of the velocity while faster than
+`RUN_SPEED`; `head_direction` (CompassDirection or heading series; degrees converted to radians, binned
 as a circular mean); `wheel_position` (zero-order hold, since encoders write a sample only when the
 wheel turns) and `wheel_velocity`; `pupil` (diameter, else area); `licks` (count per bin);
 `<keypoint>_speed` for ndx-pose keypoints (confidence below `POSE_MIN_CONFIDENCE` removed, pupil
@@ -92,9 +98,11 @@ warning when less than 90% of a behaviour file lies inside the neural recording 
 below 50%) or when behaviour continues past the last spike (IBL: units stop at 2001.7 s, the window
 stops there); the session fails when they do not overlap at all.
 
-**Epoch.** `EPOCH=all`, `trials`, `run` (smoothed speed above `RUN_SPEED`, 3 cm/s by default,
-gaps < 0.5 s closed and runs < 0.5 s dropped, with pynapple IntervalSets) or the name of any
-TimeIntervals table (e.g. `laps`, `WheelMovementIntervals`).
+**Epoch.** `EPOCH=all`, `trials`, `run` (on a linear track: running along the track inside
+detected laps; elsewhere smoothed speed above `RUN_SPEED`, 3 cm/s by default, gaps < 0.5 s closed
+and runs < 0.5 s dropped, with pynapple IntervalSets) or the name of any TimeIntervals table (e.g.
+`laps_detected`, `WheelMovementIntervals`). A speed threshold alone is not enough on a track:
+head-tracking jitter on Grosmark's end platforms exceeds 3 cm/s 75% of the time off the laps.
 
 ## Parameters
 
@@ -141,14 +149,14 @@ Behaviour variable kinds (`behavior_kinds`): `position`, `position_x`, `position
 
 | Session | Neural | Behaviour | Window |
 |---|---|---|---|
-| Grosmark & Buzsáki, `sub-Buddy_ses-Buddy-06272013` (DANDI 000044) | 58 CA1 units (68 in the file; 10 below 0.1 Hz on the maze) | x, y (m), linearised track position (authors'), speed, run direction | 2328 s (the maze epoch: position exists only there), 93,117 bins of 25 ms |
+| Grosmark & Buzsáki, `sub-Buddy_ses-Buddy-06272013` (DANDI 000044), `EPOCH=run` | 58 CA1 units (38 pyramidal, 20 interneurons; 68 in the file, 10 below 0.1 Hz on the maze) | x, y (m), track position linearised from x, y (the file's `linearized_position` covers only 7% of the maze time, inside laps), speed, run direction | 2328 s (the maze epoch: position exists only there), 93,117 bins of 25 ms; 57 laps detected (328 s; the authors' trials table has 66 laps, 218 s, 211 s of which fall in detected laps); running inside laps 266 s |
 | IBL `sub-NR-0031_ses-caa5dddc` (DANDI 000409) | 186 units with `ibl_quality_score` = 1 of 1359 (Anterior pretectal nucleus 70, Midbrain reticular nucleus 35, Field CA1 31, ...) | wheel position/velocity (rad), pupil diameter, licks, paw and nose speeds (Lightning Pose), 404 trials + wheel movements | 0.1–2001.7 s (warning: behaviour continues 84 s past the last spike) |
 | CA1 1p calcium, WT and 5xFAD, 6 sessions (DANDI 002047) | 42–264 accepted ROIs (`events`, DRIADA calcium events) | x, y (cm), speed, head direction, 13 keypoint speeds | 719 s each at the 29.8 Hz frame rate |
 | Steinmetz et al. 2019 `sub-Richards` (DANDI 000017) | 490 units (`phy_annotations` ≥ 2; ORB, MOs, OLF, root) | wheel (mm; its `rate` attribute was a period: corrected), pupil area, licks, 260 trials | 2955 s |
-| Sosa et al. 2025 `sub-m11_ses-04` (DANDI 001361), `EPOCH=run` | 168 accepted ROIs (Deconvolved) | 1D virtual track (−500 off-track values removed), speed, licks | 1352 s at 15.5 Hz; running 90% |
+| Sosa et al. 2025 `sub-m11_ses-04` (DANDI 001361), `EPOCH=run` | 168 accepted ROIs (Deconvolved) | 1D virtual track (−500 off-track values removed), speed, licks | 1352 s at 15.5 Hz; 80 laps detected; running inside laps 702 s (52%) |
 
 Synthetic fixture (`make test`): the 'mua' and near-silent units are dropped, the 2D track is
-detected and linearised, spike-weighted mean positions of place cells are within 10 cm of their
+detected and linearised, all 33 simulated laps are found, spike-weighted mean positions of place cells are within 10 cm of their
 planted centres (median), speed cells correlate with speed, rejected ROIs and the off-track
 value are removed, and behaviour on another clock fails the session with a clear message.
 

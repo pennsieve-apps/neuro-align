@@ -364,6 +364,8 @@ def process_session(sess, params: dict, input_dir: Path, top: Path) -> dict:
         Y = np.stack([v.values for v in B.vars], axis=1).astype(np.float32) if B.vars else np.zeros((grid.n, 0), np.float32)
 
         # ---------------------------------------------------------------- events + epoch
+        if B.info.get("laps"):
+            tables.append(("laps_detected", pd.DataFrame(B.info["laps"], columns=["start_time", "stop_time", "direction"])))
         frames = []
         for name, df in tables:
             if df is None or not len(df) or "start_time" not in df:
@@ -385,8 +387,12 @@ def process_session(sess, params: dict, input_dir: Path, top: Path) -> dict:
             sp = B.get("speed")
             if sp is None:
                 raise ValueError("EPOCH=run needs a speed (or a position to derive it from); none found")
-            epoch, thr = A.run_epoch(sp, grid, params)
-            epoch_info.update(speed_threshold=thr, speed_unit=sp.unit, min_duration_s=A.MIN_RUN_S)
+            rdv = B.get("run_direction")
+            epoch, thr = A.run_epoch(sp, grid, params, rdv)
+            lapwise = rdv is not None and "detected laps" in rdv.note
+            epoch_info.update(speed_threshold=thr, speed_unit=sp.unit,
+                              definition="running along the track inside detected laps" if lapwise else
+                              f"speed >= threshold for >= {A.MIN_RUN_S} s")
         else:
             names_t = {n.lower(): n for n, _ in tables}
             key = ep.lower()
@@ -442,6 +448,9 @@ def process_session(sess, params: dict, input_dir: Path, top: Path) -> dict:
                        "dropped": neural.dropped, "frame_period_s": neural.frame_period},
             "behavior": {"files": status["behavior_files"], "variables": variables,
                          "linear_track": B.info.get("linear_track"),
+                         "laps": {"n": len(B.info.get("laps", [])),
+                                  "seconds": round(sum(b - a for a, b, _ in B.info.get("laps", [])), 2),
+                                  "table": "laps_detected" if B.info.get("laps") else None},
                          "smooth_s": params["SMOOTH_S"], "pose_min_confidence": params["POSE_MIN_CONFIDENCE"]},
             "epoch": epoch_info,
             "events": {"tables": sorted(events["table"].unique().tolist()) if len(events) else [],

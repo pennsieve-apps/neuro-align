@@ -320,6 +320,10 @@ def build_behaviour(series: list[Series], grid: Grid, params: dict) -> Behaviour
         B.add(Var("x", "position_x", pos_unit, xy[:, 0], src))
         B.add(Var("y", "position_y", pos_unit, xy[:, 1], src))
         multi = [None]
+    lin_own, lin_info = None, None
+    if multi and params["LINEARIZE"] is not False and B.get("x") is not None:
+        xy = np.c_[B.get("x").values, B.get("y").values]
+        lin_own, lin_info = linear_track(xy, params["LINEARIZE"])
     if one:
         s = one[0]
         v = s.v.ravel() if s.v.ndim == 1 else s.v[:, 0]
@@ -327,15 +331,26 @@ def build_behaviour(series: list[Series], grid: Grid, params: dict) -> Behaviour
         if n_bad:
             B.warnings.append(f"{s.name}: {n_bad} samples at an off-track constant value set to missing")
         lin = resample(s.t, v, grid)
-        B.add(Var("position", "position", s.unit, lin, s.source, note="1D position from the file"))
+        cover_1d = np.isfinite(lin).mean()
+        cover_2d = np.isfinite(lin_own).mean() if lin_own is not None else 0.0
+        if lin_own is not None and cover_1d < 0.5 * cover_2d:
+            # The file's 1D position exists for only part of the time (e.g. only inside laps, Grosmark
+            # et al.): the 2D path, linearised here, covers the whole track and the laps can be found on it.
+            B.add(Var("position", "position", pos_unit, lin_own, B.get("x").source,
+                      note=f"linearised 2D position ({s.name} covers only {100 * cover_1d:.0f}% of the time)"))
+            B.add(Var(safe_name(s.name), "position_alt", s.unit, lin, s.source, note="1D position from the file"))
+            B.info["linear_track"] = lin_info | {"file_1d_position": s.name, "file_1d_coverage": round(float(cover_1d), 4)}
+            B.warnings.append(f"{s.name} covers {100 * cover_1d:.0f}% of the time, the 2D position "
+                              f"{100 * cover_2d:.0f}%; 'position' is the linearised 2D position, "
+                              f"'{safe_name(s.name)}' the file's own")
+        else:
+            B.add(Var("position", "position", s.unit, lin, s.source, note="1D position from the file"))
+            B.info["linear_track"] = {"source": "1D position in the file"}
         pos_unit = pos_unit or s.unit
-        B.info["linear_track"] = {"source": "1D position in the file"}
-    elif multi and params["LINEARIZE"] is not False:
-        xy = np.c_[B.get("x").values, B.get("y").values]
-        lin, info = linear_track(xy, params["LINEARIZE"])
-        B.info["linear_track"] = info
-        if lin is not None:
-            B.add(Var("position", "position", pos_unit, lin, B.get("x").source,
+    elif lin_info is not None:
+        B.info["linear_track"] = lin_info
+        if lin_own is not None:
+            B.add(Var("position", "position", pos_unit, lin_own, B.get("x").source,
                       note="linearised: projection on the track's long axis"))
 
     # Speed: a recorded running speed first, else from position.
@@ -355,16 +370,29 @@ def build_behaviour(series: list[Series], grid: Grid, params: dict) -> Behaviour
         v = derivative(p, bs, sig, 0.2 * rng if rng else None)
         B.add(Var("speed", "speed", f"{pos_unit}/s" if pos_unit else "1/s", np.abs(v), "derived from position"))
 
-    # Run direction on a linear track (+1 increasing position, -1 decreasing, 0 still).
+    # Run direction on a linear track: inside laps (end-to-end traversals) +1 towards higher position, -1 towards
+    # lower, while moving along the track faster than the running threshold; 0 elsewhere (ends, pauses, turns).
+    # Without laps (not a track, or too few), the sign of the velocity while running.
     if B.get("position") is not None and B.get("speed") is not None:
         p = B.get("position").values
         rng = np.nanpercentile(p, 99) - np.nanpercentile(p, 1) if np.isfinite(p).any() else None
         v = derivative(p, bs, sig, 0.2 * rng if rng else None)
         thr = run_threshold(B.get("speed"), params)
-        d = np.where(np.isfinite(v) & (np.abs(v) >= thr), np.sign(v), 0.0)
+        moving = np.isfinite(v) & (np.abs(v) >= thr)
+        laps = detect_laps(p, grid, sig)
+        if len(laps) >= 3:
+            d = np.zeros(grid.n)
+            for a, b, direction in laps:
+                seg = slice(a, b)
+                d[seg] = np.where(moving[seg] & (np.sign(v[seg]) == direction), direction, 0.0)
+            note = (f"+1 / -1 inside the {len(laps)} detected laps while moving along the track at >= {thr:g} "
+                    f"{B.get('speed').unit}, else 0")
+            B.info["laps"] = [(float(grid.edges[a]), float(grid.edges[b]), int(direction)) for a, b, direction in laps]
+        else:
+            d = np.where(moving, np.sign(v), 0.0)
+            note = f"+1 / -1 when |velocity| >= {thr:g}, else 0 (no laps detected)"
         d[~np.isfinite(p)] = np.nan
-        B.add(Var("run_direction", "direction", "sign", d, "sign of d(position)/dt while running",
-                  note=f"+1 / -1 when |velocity| >= {thr:g}, else 0"))
+        B.add(Var("run_direction", "direction", "sign", d, "sign of d(position)/dt while running", note=note))
 
     ang = [s for s in series if s.kind == "angle"]
     if ang:
@@ -458,6 +486,39 @@ def build_behaviour(series: list[Series], grid: Grid, params: dict) -> Behaviour
     return B
 
 
+LAP_END_FRACTION = 0.1
+MIN_LAP_S, MAX_LAP_S = 0.5, 60.0
+
+
+def detect_laps(p: np.ndarray, grid: Grid, sigma_bins: float) -> list[tuple[int, int, int]]:
+    """Laps on a linear track: from the last bin in one end zone (the outer 10% of the track) to the first bin
+    in the other, 0.5-60 s long, without a gap in the position; direction +1 towards higher position."""
+    ok = np.isfinite(p)
+    if ok.sum() < 100:
+        return []
+    ps = nan_smooth(p, sigma_bins)
+    lo, hi = np.nanpercentile(ps, [1, 99])
+    L = hi - lo
+    if not L > 0:
+        return []
+    zone = np.full(len(ps), 0)
+    zone[ps <= lo + LAP_END_FRACTION * L] = -1
+    zone[ps >= hi - LAP_END_FRACTION * L] = 1
+    zone[~np.isfinite(ps)] = 2   # a gap ends any lap in progress
+    laps, last_zone, last_idx = [], None, None
+    for i in np.flatnonzero(zone != 0):
+        z = zone[i]
+        if z == 2:
+            last_zone, last_idx = None, None
+            continue
+        if last_zone is not None and z != last_zone:
+            dur = (i - last_idx) * grid.bin_size
+            if MIN_LAP_S <= dur <= MAX_LAP_S:
+                laps.append((int(last_idx), int(i) + 1, 1 if z == 1 else -1))
+        last_zone, last_idx = z, i
+    return laps
+
+
 def run_threshold(speed: Var, params: dict) -> float:
     if params["RUN_SPEED"] is not None:
         return float(params["RUN_SPEED"])
@@ -490,8 +551,15 @@ def intervals_to_mask(iset: nap.IntervalSet, grid: Grid) -> np.ndarray:
     return out
 
 
-def run_epoch(speed: Var, grid: Grid, params: dict) -> tuple[np.ndarray, float]:
+def run_epoch(speed: Var, grid: Grid, params: dict, run_direction: Var | None = None) -> tuple[np.ndarray, float]:
     thr = run_threshold(speed, params)
+    if run_direction is not None and "detected laps" in run_direction.note:
+        # on a linear track: running along the track inside laps
+        m = np.isfinite(run_direction.values) & (run_direction.values != 0)
+        iset = mask_to_intervals(m, grid)
+        if len(iset):
+            iset = iset.merge_close_intervals(0.25).drop_short_intervals(0.25)
+        return intervals_to_mask(iset, grid), thr
     m = np.isfinite(speed.values) & (speed.values >= thr)
     iset = mask_to_intervals(m, grid)
     if len(iset):
