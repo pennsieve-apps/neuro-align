@@ -605,6 +605,7 @@ references:
   year: 2024
   publisher:
     name: DANDI Archive
+  version: 0.240329.1926
   doi: 10.48324/dandi.000017/0.240329.1926
 - type: article
   title: Distributed coding of choice, action and engagement across the mouse brain

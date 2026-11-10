@@ -39,6 +39,15 @@ def runtime_env(app: str) -> str:
     import tempfile
 
     tmp = os.environ.get("TMPDIR") or tempfile.gettempdir()
+    # A HOME that cannot be written (the image's user has none; ECS may not set one) breaks libraries that
+    # keep a cache there (pynwb/hdmf via platformdirs): use one under TMPDIR instead.
+    home = os.environ.get("HOME", "")
+    if not home or not os.path.isdir(home) or not os.access(home, os.W_OK):
+        home = os.path.join(tmp, "home")
+        os.makedirs(home, exist_ok=True)
+        os.environ["HOME"] = home
+    if not os.access(os.environ.get("XDG_CACHE_HOME") or home, os.W_OK):
+        os.environ["XDG_CACHE_HOME"] = os.path.join(tmp, "cache")
     mpl = os.environ.setdefault("MPLCONFIGDIR", os.path.join(tmp, "mpl"))
     os.environ.setdefault("NUMBA_CACHE_DIR", os.path.join(tmp, "numba"))
     baked = Path("/opt") / app / "mpl"
