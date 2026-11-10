@@ -206,3 +206,33 @@ def test_rate_is_period(tmp_path):
     w = []
     t = series_times(ts, 1_000_000, w, "w")
     assert w and abs(t[-1] - (10 + 999_999 / 2500)) < 1e-6
+
+
+def test_position_in_file_frame():
+    """2D tracking over the whole session plus the authors' 1D track position inside laps only (Grosmark):
+    'position' is the linearised 2D path mapped onto the file's frame; the end platforms fall outside it."""
+    from processor.align import build_behaviour, make_grid
+    from processor.nwbio import Series
+
+    rng = np.random.default_rng(0)
+    t = np.arange(0, 600, 1 / 30)
+    # back and forth over 2.5 m of path (0.4 m platform at each end), metres
+    path = 1.25 + 1.25 * np.sin(2 * np.pi * t / 20)
+    xy = np.c_[path - 0.9, -1.2 + rng.normal(0, 0.02, len(t))]
+    # the authors' track coordinate: 0-1.6 m between the platforms, missing on them and between laps
+    track = path - 0.45
+    track = np.where((track >= 0) & (track <= 1.6) & (np.sin(2 * np.pi * t / 7) > -0.2), track, np.nan)
+    series = [Series("position_2d", "position", t, xy, "meters", "f::xy", "Position"),
+              Series("linearized_position", "position", t, track, "meters", "f::lin", "Position")]
+    grid = make_grid(0, 600, 0.025)
+    params = {"SMOOTH_S": 0.1, "BEHAVIOR_VARS": {"auto": True, "names": [], "extra": []}, "LINEARIZE": None,
+              "POSE_MIN_CONFIDENCE": 0.5, "RUN_SPEED": None}
+    B = build_behaviour(series, grid, params)
+    pos = B.get("position").values
+    m = B.info["linear_track"]["map_to_file"]
+    assert abs(abs(m["scale"]) - 1) < 0.02 and m["r"] > 0.99
+    assert -0.5 < np.nanmin(pos) < -0.3 and 1.9 < np.nanmax(pos) < 2.1   # platforms outside 0-1.6
+    ok = np.isfinite(B.get("linearized_position").values)
+    assert np.nanmax(np.abs(pos[ok] - B.get("linearized_position").values[ok])) < 0.05
+    raw = B.get("position_linearised").values
+    assert np.nanmin(raw) > -0.1 and np.nanmax(raw) > 2.3   # the raw projection starts at 0

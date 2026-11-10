@@ -251,6 +251,16 @@ def clean_sentinels(v: np.ndarray) -> tuple[np.ndarray, int]:
     return x, n_bad
 
 
+def map_to_file(own: np.ndarray, file_pos: np.ndarray, min_bins: int = 50) -> dict | None:
+    """Least-squares affine map file_pos ~ scale * own + offset over the bins where both are known."""
+    ok = np.isfinite(own) & np.isfinite(file_pos)
+    if ok.sum() < min_bins or np.std(own[ok]) == 0 or np.std(file_pos[ok]) == 0:
+        return None
+    scale, offset = np.polyfit(own[ok], file_pos[ok], 1)
+    r = float(np.corrcoef(own[ok], file_pos[ok])[0, 1])
+    return {"scale": float(scale), "offset": float(offset), "r": r, "n_bins": int(ok.sum())}
+
+
 def linear_track(xy: np.ndarray, force: bool | None) -> tuple[np.ndarray | None, dict]:
     """Linearise 2D positions on a linear track: projection on the first principal axis, starting at 0."""
     ok = np.all(np.isfinite(xy), axis=1)
@@ -336,13 +346,34 @@ def build_behaviour(series: list[Series], grid: Grid, params: dict) -> Behaviour
         if lin_own is not None and cover_1d < 0.5 * cover_2d:
             # The file's 1D position exists for only part of the time (e.g. only inside laps, Grosmark
             # et al.): the 2D path, linearised here, covers the whole track and the laps can be found on it.
-            B.add(Var("position", "position", pos_unit, lin_own, B.get("x").source,
-                      note=f"linearised 2D position ({s.name} covers only {100 * cover_1d:.0f}% of the time)"))
+            # It is put into the file's frame and units by an affine fit over the bins where both exist, so
+            # 'position' reads like the authors' track coordinate (end platforms fall outside its range).
+            mapping = map_to_file(lin_own, lin)
+            info = lin_info | {"file_1d_position": s.name, "file_1d_coverage": round(float(cover_1d), 4)}
+            if mapping is not None and abs(mapping["r"]) >= 0.9:
+                pos_vals = mapping["scale"] * lin_own + mapping["offset"]
+                info["map_to_file"] = mapping
+                log.info("linearised 2D position mapped onto %s: position = %.4f x linearised %+.4f (r = %.4f, "
+                         "%d bins)", s.name, mapping["scale"], mapping["offset"], mapping["r"], mapping["n_bins"])
+                B.add(Var("position", "position", s.unit, pos_vals, B.get("x").source,
+                          note=f"linearised 2D position in the frame of {s.name} (affine fit, r = {mapping['r']:.4f}; "
+                               f"{s.name} itself covers only {100 * cover_1d:.0f}% of the time)"))
+            else:
+                info["map_to_file"] = mapping
+                B.warnings.append(f"the linearised 2D position does not match {s.name} (affine fit "
+                                  f"r = {mapping['r'] if mapping else float('nan'):.3f}); 'position' is left in the "
+                                  f"2D tracking's units and frame")
+                B.add(Var("position", "position", pos_unit, lin_own, B.get("x").source,
+                          note=f"linearised 2D position ({s.name} covers only {100 * cover_1d:.0f}% of the time)"))
+            B.add(Var("position_linearised", "position_alt", pos_unit, lin_own, B.get("x").source,
+                      note="projection of x, y on the track's long axis, before mapping onto the file's frame"))
             B.add(Var(safe_name(s.name), "position_alt", s.unit, lin, s.source, note="1D position from the file"))
-            B.info["linear_track"] = lin_info | {"file_1d_position": s.name, "file_1d_coverage": round(float(cover_1d), 4)}
+            B.info["linear_track"] = info
             B.warnings.append(f"{s.name} covers {100 * cover_1d:.0f}% of the time, the 2D position "
-                              f"{100 * cover_2d:.0f}%; 'position' is the linearised 2D position, "
-                              f"'{safe_name(s.name)}' the file's own")
+                              f"{100 * cover_2d:.0f}%; 'position' is the linearised 2D position"
+                              + (" in the file's frame" if "scale" in (info.get("map_to_file") or {}) and
+                                 abs(info["map_to_file"]["r"]) >= 0.9 else "")
+                              + f", '{safe_name(s.name)}' the file's own")
         else:
             B.add(Var("position", "position", s.unit, lin, s.source, note="1D position from the file"))
             B.info["linear_track"] = {"source": "1D position in the file"}

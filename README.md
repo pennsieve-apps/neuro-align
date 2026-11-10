@@ -72,8 +72,12 @@ neural-only and one behaviour-only session, they are paired with a warning.
 single-camera pose without a wheel); `position` (a 1D position in the file, or 2D position
 linearised on its long axis when the path is a linear track, `LINEARIZE`; when the file's 1D
 position covers less than half the time the 2D position does, as in Grosmark's lap-only
-`linearized_position`, the linearised 2D position is used and the file's own is kept under its
-name); `speed` (a recorded running speed, else from position); `run_direction`: on a linear track
+`linearized_position`, the linearised 2D position is used, mapped into the file's frame and units
+by an affine least-squares fit over the bins where both exist (scale, offset and r in the log and
+in `manifest.json` → `behavior.linear_track.map_to_file`; with r < 0.9 it is not mapped and a
+warning says so), so `position` reads like the authors' track coordinate and positions on the end
+platforms fall below 0 and above the track length; the raw projection is kept as
+`position_linearised` and the file's own series under its name); `speed` (a recorded running speed, else from position); `run_direction`: on a linear track
 laps are detected (from the last moment in one end zone, the outer 10% of the track, to the first
 moment in the other; 0.5-60 s; written to events.parquet as `laps_detected`) and `run_direction`
 is +1/−1 inside a lap while moving along the track at ≥ `RUN_SPEED`, 0 elsewhere (end platforms,
@@ -149,7 +153,7 @@ Behaviour variable kinds (`behavior_kinds`): `position`, `position_x`, `position
 
 | Session | Neural | Behaviour | Window |
 |---|---|---|---|
-| Grosmark & Buzsáki, `sub-Buddy_ses-Buddy-06272013` (DANDI 000044), `EPOCH=run` | 58 CA1 units (38 pyramidal, 20 interneurons; 68 in the file, 10 below 0.1 Hz on the maze) | x, y (m), track position linearised from x, y (the file's `linearized_position` covers only 7% of the maze time, inside laps), speed, run direction | 2328 s (the maze epoch: position exists only there), 93,117 bins of 25 ms; 57 laps detected (328 s; the authors' trials table has 66 laps, 218 s, 211 s of which fall in detected laps); running inside laps 266 s |
+| Grosmark & Buzsáki, `sub-Buddy_ses-Buddy-06272013` (DANDI 000044), `EPOCH=run` | 58 CA1 units (38 pyramidal, 20 interneurons; 68 in the file, 10 below 0.1 Hz on the maze) | x, y (m), track position linearised from x, y and mapped onto the file's `linearized_position` (which covers only 7% of the maze time, inside laps): position = 1.0213 × projection − 0.4306 m, r = 1.0000 over 6,899 bins, so the 1.6 m track reads 0-1.6 m and the end platforms −0.5 to 0 and 1.6 to 2.1 m; speed, run direction | 2328 s (the maze epoch: position exists only there), 93,117 bins of 25 ms; 57 laps detected (328 s; the authors' trials table has 66 laps, 218 s, 211 s of which fall in detected laps); running inside laps 266 s |
 | IBL `sub-NR-0031_ses-caa5dddc` (DANDI 000409) | 186 units with `ibl_quality_score` = 1 of 1359 (Anterior pretectal nucleus 70, Midbrain reticular nucleus 35, Field CA1 31, ...) | wheel position/velocity (rad), pupil diameter, licks, paw and nose speeds (Lightning Pose), 404 trials + wheel movements | 0.1–2001.7 s (warning: behaviour continues 84 s past the last spike) |
 | CA1 1p calcium, WT and 5xFAD, 6 sessions (DANDI 002047) | 42–264 accepted ROIs (`events`, DRIADA calcium events) | x, y (cm), speed, head direction, 13 keypoint speeds | 719 s each at the 29.8 Hz frame rate |
 | Steinmetz et al. 2019 `sub-Richards` (DANDI 000017) | 490 units (`phy_annotations` ≥ 2; ORB, MOs, OLF, root) | wheel (mm; its `rate` attribute was a period: corrected), pupil area, licks, 260 trials | 2955 s |
