@@ -1,5 +1,6 @@
 cff-version: 1.2.0
-message: If you use this app, please cite it and the works it builds on, listed under references.
+message: >-
+  If you use this app, please cite the work it implements (preferred-citation), this release, and Pennsieve (RRID:SCR_021677); the other works it builds on are listed under references.
 type: software
 title: neuro-align
 abstract: Reads neural activity (spike-sorted units or calcium-imaging ROIs) and behaviour (position, speed, head
@@ -24,6 +25,39 @@ keywords:
 - nwb
 - pynapple
 - alignment
+# The work this app implements; the release report's "How to cite" puts it first.
+preferred-citation:
+  type: article
+  title: Pynapple, a toolbox for data analysis in neuroscience
+  authors:
+  - family-names: Viejo
+    given-names: Guillaume
+  - family-names: Levenstein
+    given-names: Daniel
+  - family-names: Skromne Carrasco
+    given-names: Sofia
+  - family-names: Mehrotra
+    given-names: Dhruv
+  - family-names: Mahallati
+    given-names: Sara
+  - family-names: Vite
+    given-names: Gilberto R
+  - family-names: Denny
+    given-names: Henry
+  - family-names: Sjulson
+    given-names: Lucas
+  - family-names: Battaglia
+    given-names: Francesco P
+  - family-names: Peyrache
+    given-names: Adrien
+  year: 2023
+  journal: eLife
+  volume: 12
+  doi: 10.7554/eLife.85786
+  identifiers:
+  - type: other
+    value: '37843985'
+    description: PMID
 references:
 - type: article
   title: Pynapple, a toolbox for data analysis in neuroscience
